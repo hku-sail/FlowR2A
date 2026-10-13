@@ -1,20 +1,25 @@
 """
 Reward caching builder: create transfuser_reward.gz per scene.
 
-For each token:
-  1. Load the reward-pack entry and keep only the whitelisted keys (_KEEP_KEYS).
-  2. Run full PDM simulation for all 8192 vocab trajectories.
-  3. Save 40-step iPad GT (ego_areas, ttc_time) at full simulator resolution.
-  4. Save the freshly-simulated PDM sub-scores with a _v1 suffix.
+The input reward pack is the GTRS `navtrain_8192.pkl` ({token: PDM sub-scores
+over the 8192 vocab trajectories}). For each token:
+  1. Load the reward-pack entry and add the derived keys if missing:
+       - prob_density: KDE density of the vocab's pdm_score distribution.
+       - safe_ego_progress_normed: ego_progress with TTC-failing trajectories
+         zeroed, normalized by the per-token max.
+  2. Keep only the whitelisted keys (_KEEP_KEYS).
+  3. Run full PDM simulation for all 8192 vocab trajectories.
+  4. Save 40-step iPad GT (ego_areas, ttc_time) at full simulator resolution.
+  5. Save the freshly-simulated PDM sub-scores with a _v1 suffix.
 
 Scoring settings: ttc_bound=2.0, use_history_comfort=True,
 driving_direction_exclude_intersection=True.
 
 Usage:
     python scripts/caching/run_train_reward_caching.py \
-        --training-cache-dir $NAVSIM_EXP_ROOT/training_cache_4lidar_gv \
+        --training-cache-dir $NAVSIM_EXP_ROOT/training_cache \
         --pdm-cache-dir $NAVSIM_EXP_ROOT/train_pdm_cache \
-        --reward-pack-path /path/to/navtrain_8192_density_score_normed.pkl \
+        --reward-pack-path ckpts/navtrain_8192.pkl \
         --num-workers 32 --skip-existing
 """
 
@@ -26,6 +31,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from scipy.stats import gaussian_kde
 from tqdm import tqdm
 
 # Add project root to path (scripts/caching/ -> repo root is two levels up)
@@ -69,6 +75,37 @@ def _load_scoring_config():
     return cfg.simulator, cfg.scorer
 
 
+def _compute_prob_density(token, pdm_score):
+    """KDE density of the per-token pdm_score distribution, evaluated at each trajectory."""
+    try:
+        # Small jitter avoids a singular covariance when many scores are identical.
+        jittered = pdm_score + np.random.normal(0, 1e-4, size=len(pdm_score))
+        return gaussian_kde(jittered)(jittered)
+    except Exception as e:
+        print(f"Warning: KDE failed for {token}: {e}")
+        return np.zeros_like(pdm_score)
+
+
+def _add_derived_keys(token, reward_dict):
+    """Add prob_density and safe_ego_progress_normed to a raw reward-pack entry (if missing)."""
+    if "prob_density" not in reward_dict:
+        reward_dict["prob_density"] = _compute_prob_density(token, reward_dict["pdm_score"])
+
+    if "safe_ego_progress_normed" not in reward_dict:
+        # Trajectories that fail TTC get zero progress. Note: ego_progress itself is
+        # also overwritten (it is the scorer's EP target), matching the released cache.
+        ttc_fail = reward_dict["time_to_collision_within_bound"] == 0
+        safe_ego_progress = np.where(ttc_fail, 0, reward_dict["ego_progress"]).astype(
+            reward_dict["ego_progress"].dtype
+        )
+        reward_dict["ego_progress"] = safe_ego_progress
+        max_ep = safe_ego_progress.max()
+        reward_dict["safe_ego_progress_normed"] = (
+            safe_ego_progress / max_ep if max_ep > 0 else safe_ego_progress
+        )
+    return reward_dict
+
+
 def _build_token_list(training_cache_dir):
     """Walk training cache to build list of (token, token_dir, scene_dir)."""
     token_list = []
@@ -91,7 +128,8 @@ def _process_token(args):
 
     metric_cache_path = os.path.join(pdm_cache_dir, scene_dir, "unknown", token, "metric_cache.pkl")
 
-    # Keep whitelisted reward-pack keys (None = keep all).
+    # Add derived reward keys before simulation, then keep whitelisted keys (None = keep all).
+    reward_entry = _add_derived_keys(token, dict(reward_entry))
     if _KEEP_KEYS is None:
         reward_dict = dict(reward_entry)
     else:
@@ -135,7 +173,7 @@ def main():
     parser.add_argument("--pdm-cache-dir", required=True,
                         help="Path to PDM metric cache (has scene_dir/unknown/token/ subdirs)")
     parser.add_argument("--reward-pack-path", required=True,
-                        help="Path to existing monolithic reward pkl")
+                        help="Path to the monolithic reward pkl (e.g. GTRS navtrain_8192.pkl)")
     parser.add_argument("--traj-list-path",
                         default="ckpts/8192.npy",
                         help="Path to vocab trajectories .npy (default: ckpts/8192.npy)")

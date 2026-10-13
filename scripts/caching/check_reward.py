@@ -3,7 +3,8 @@ Check integrity of all reward caches (transfuser_reward.gz).
 
 For every token in the training cache, verify the reward dict loads and contains
 every expected key: all reward-pack keys, the 7 simulated _v1 scores, the 40-step
-iPad GT (ego_areas, ttc_time), and ttc_time_b15.
+iPad GT (ego_areas, ttc_time). The optional ttc_time_b15 from patch_reward.py
+is not required.
 
 Usage:
     python scripts/caching/check_reward.py \
@@ -45,8 +46,8 @@ _V1_KEYS = [
     "pdm_score_v1",
 ]
 
-# 40-step iPad GT + the extra ttc_bound=1.5 key from patch_reward.py.
-_GT_KEYS = ["ego_areas", "ttc_time", "ttc_time_b15"]
+# 40-step iPad GT.
+_GT_KEYS = ["ego_areas", "ttc_time"]
 
 _EXPECTED = _PACK_KEYS + _V1_KEYS + _GT_KEYS
 

@@ -36,6 +36,7 @@ huggingface-cli download lixirui142/FlowR2A 8192.npy --local-dir ckpts
 # Reward cache — released as split part files (reward_cache_part_*.pkl).
 # Computing rewards from scratch runs full PDM simulation for all 8192 vocab
 # trajectories per token, which is slow, so we release them pre-computed.
+# To generate them yourself, see docs/reward_simulation.md.
 huggingface-cli download lixirui142/FlowR2A --include 'reward_cache/*' --local-dir $NAVSIM_EXP_ROOT
 ```
 
@@ -97,7 +98,7 @@ The launcher scripts set `TRAIN_CONFIG` and call `run_training.py`. Checkpoints 
 bash scripts/training/run_s1_train.sh
 
 # Stage 2 — scorer, initialized from the stage-1 checkpoint
-bash scripts/training/run_s2_train.sh /path/to/stage1/epoch=...ckpt
+bash scripts/training/run_s2_train.sh /path/to/stage1/ckpt
 ```
 
 Any extra arguments are forwarded to `run_training.py` as Hydra overrides.

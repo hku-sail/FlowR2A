@@ -1,6 +1,8 @@
 <div align="center">
 <h1>FlowR2A: Learning Reward-to-Action Distribution for Multimodal Driving Planning</h1>
 
+<h3>NeurIPS 2026</h3>
+
 <a href="https://lixirui142.github.io/flowr2a-ad/"><img src="https://img.shields.io/badge/Project-Page-blue.svg" alt="Project Page"></a>
 <a href="https://arxiv.org/abs/2606.24231"><img src="https://img.shields.io/badge/arXiv-Paper-b31b1b.svg" alt="arXiv"></a>
 <a href="https://huggingface.co/lixirui142/FlowR2A"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow.svg" alt="Hugging Face Model"></a>
@@ -8,6 +10,9 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 </div>
+
+## News
+- **[2026-10]** FlowR2A has been accepted to NeurIPS 2026.
 
 ## Overview
 FlowR2A is a multimodal driving planner that learns the reward-conditioned action distribution *p(a | r)* with flow matching. Instead of treating simulation rewards as discriminative targets, FlowR2A treats them as a *condition*, unifying the dense supervision of scoring-based methods with the generative proposal modeling of anchor-based methods. At inference, generation is steered toward high-reward trajectories via classifier-free guidance.
@@ -19,6 +24,7 @@ FlowR2A is a multimodal driving planner that learns the reward-conditioned actio
 
 
 ## Table of Contents
+- [News](#news)
 - [Overview](#overview)
 - [Table of Contents](#table-of-contents)
 - [Qualitative Results on NAVSIM](#qualitative-results-on-navsim)
@@ -44,11 +50,12 @@ Each row is one planner; trajectory proposals are colored by PDM score, from <b>
 - [Data and Environment Preparation](docs/install.md) — install dependencies and download the data/models needed for evaluation.
 - [Evaluation](docs/evaluation.md) — download the pre-trained checkpoints and run evaluation on the test set.
 - [Training](docs/training.md) — download the training data and prepare the cache, then train the model in two stages.
+- [Reward Simulation](docs/reward_simulation.md) — (optional) generate the reward cache from scratch instead of downloading it.
 
 ## To-Do
 - [x] Inference and evaluation code
 - [x] Training code
-- [ ] Reward simulation / caching pipeline
+- [x] Reward simulation / caching pipeline
 
 ## Acknowledgement
 FlowR2A is built upon the following outstanding open-source contributions: [NAVSIM](https://github.com/autonomousvision/navsim), [DiffusionDrive](https://github.com/hustvl/DiffusionDrive).
@@ -57,13 +64,11 @@ FlowR2A is built upon the following outstanding open-source contributions: [NAVS
 If you find FlowR2A useful in your research or applications, please consider giving us a star 🌟 and citing it with the following BibTeX entry.
 
 ```bibtex
-@article{flowr2a2026,
-  title         = {FlowR2A: Learning Reward-to-Action Distribution for Multimodal Driving Planning},
-  author        = {Li, Xirui and Liu, Zhe and Ye, Xiaoqing and Han, Wenhua and Pan, Yifeng and Han, Junyu and Zhao, Hengshuang},
-  journal       = {arXiv preprint arXiv:2606.24231},
-  eprint        = {2606.24231},
-  archivePrefix = {arXiv},
-  year          = {2026}
+@inproceedings{flowr2a2026,
+  title     = {FlowR2A: Learning Reward-to-Action Distribution for Multimodal Driving Planning},
+  author    = {Li, Xirui and Liu, Zhe and Ye, Xiaoqing and Han, Wenhua and Pan, Yifeng and Han, Junyu and Zhao, Hengshuang},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026}
 }
 ```
 
