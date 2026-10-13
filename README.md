@@ -12,6 +12,7 @@
 </div>
 
 ## News
+- **[2026-10]** We released the reward simulation pipeline ([guide](docs/reward_simulation.md)) and interactive visualization tools ([guide](docs/visualization.md)).
 - **[2026-10]** FlowR2A has been accepted to NeurIPS 2026.
 
 ## Overview
@@ -51,6 +52,7 @@ Each row is one planner; trajectory proposals are colored by PDM score, from <b>
 - [Evaluation](docs/evaluation.md) — download the pre-trained checkpoints and run evaluation on the test set.
 - [Training](docs/training.md) — download the training data and prepare the cache, then train the model in two stages.
 - [Reward Simulation](docs/reward_simulation.md) — (optional) generate the reward cache from scratch instead of downloading it.
+- [Visualization](docs/visualization.md) — interactively inspect model outputs on navtest and the navtrain reward cache in the browser.
 
 ## To-Do
 - [x] Inference and evaluation code
